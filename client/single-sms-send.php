@@ -72,65 +72,78 @@ if (isset($_POST['submit'])){
         /*Api Integration Start Here*/
 
         /*For Twilio SMS Gateway*/
-
-
+        
         if($gateway=='Twilio'){
-            $twilio_info=ORM::for_table('sms_gateway')->where('name',$gateway)->find_one();
-            $twilio_count=ORM::for_table('sms_gateway')->where('name',$gateway)->where('status','Active')->count();
+	$twilio_info=ORM::for_table('sms_gateway')->where('name',$gateway)->find_one();
+	$account_sid=$twilio_info['username'];
+    $auth_token=$twilio_info['password'];
 
-            $xstage=appconfig('appStage');
+     $cmd = "python /var/www/html/b1s/lib/py/wa.py \"$clphone+$sender_id+$message+$account_sid+$auth_token\" 2>&1";
+     $ffmpeg_path = exec($cmd);
+     $get_sms_status = "$ffmpeg_path"; 
 
-            if($xstage!='Demo'){
-
-                if($twilio_count=='1'){
-
-
-
-                    require_once('../lib/sms_gateway/twilio-php/Services/Twilio.php');
-                    $account_sid=$twilio_info['username'];
-                    $auth_token=$twilio_info['password'];
-                    try{
-
-                        $url = "https://api.twilio.com/2010-04-01/Accounts/$account_sid/SMS/Messages.json";
-                        $data = array (
-                            'From' => $sender_id,
-                            'To' => $clphone,
-                            'Body' => $message,
-
-                        );
-                        $post = http_build_query($data);
-                        $curl = curl_init($url);
-                        curl_setopt($curl, CURLOPT_POST, true);
-                        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-                        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                        curl_setopt($curl, CURLOPT_USERPWD, "$account_sid:$auth_token");
-                        curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-
-                        $result=explode(",",$response);
-
-                        $get_sms_status=$result['1'];
+	
+	
+}
 
 
-                        $search=array("message",":",'"');
-
-                        $get_sms_status=trim(str_replace($search,"",$get_sms_status));
-                    }catch (Exception $e){
-                        $get_sms_status="Unknown Error";
-                    }
-
-
-                }
-                else{
-                    conf($self,'e','Selected Gateway is Not Active');
-                }
-            }
-            else{
-                $get_sms_status='Not Send In demo Mode';
-            }
-        }
+//        if($gateway=='Twilio'){
+//            $twilio_info=ORM::for_table('sms_gateway')->where('name',$gateway)->find_one();
+//            $twilio_count=ORM::for_table('sms_gateway')->where('name',$gateway)->where('status','Active')->count();
+//
+//            $xstage=appconfig('appStage');
+//
+//            if($xstage!='Demo'){
+//
+//                if($twilio_count=='1'){
+//
+//
+//
+//                    require_once('../lib/sms_gateway/twilio-php/Services/Twilio.php');
+//                    $account_sid=$twilio_info['username'];
+//                    $auth_token=$twilio_info['password'];
+//                    try{
+//
+//                        $url = "https://api.twilio.com/2010-04-01/Accounts/$account_sid/SMS/Messages.json";
+//                        $data = array (
+//                            'From' => $sender_id,
+//                            'To' => $clphone,
+//                            'Body' => $message,
+//
+//                        );
+//                        $post = http_build_query($data);
+//                        $curl = curl_init($url);
+//                        curl_setopt($curl, CURLOPT_POST, true);
+//                        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+//                        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+//                        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+//                        curl_setopt($curl, CURLOPT_USERPWD, "$account_sid:$auth_token");
+//                        curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
+//                        $response = curl_exec($curl);
+//                        curl_close($curl);
+//
+//                        $result=explode(",",$response);
+//
+//                        $get_sms_status=$result['1'];
+//
+//
+//                        $search=array("message",":",'"');
+//
+//                        $get_sms_status=trim(str_replace($search,"",$get_sms_status));
+//                    }catch (Exception $e){
+//                        $get_sms_status="Unknown Error";
+//                    }
+//
+//
+//                }
+//                else{
+//                    conf($self,'e','Selected Gateway is Not Active');
+//                }
+//            }
+//            else{
+//                $get_sms_status='Not Send In demo Mode';
+//            }
+//        }
 
 
         if($gateway=='TelAPI'){
